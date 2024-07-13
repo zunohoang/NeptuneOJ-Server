@@ -1,0 +1,17 @@
+package org.example.neptuneojserver.repositorys;
+
+import org.example.neptuneojserver.models.Problem;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+
+@Repository
+public interface ProblemRepository extends JpaRepository<Problem, Long> {
+
+    @Query("SELECT p FROM Problem p WHERE p.hidden = false ORDER BY p.createdAt DESC")
+    Page<Problem> findAllPaged(Pageable pageable);
+}
