@@ -18,6 +18,7 @@ public class ProblemResponseDTO {
     private Long memory;
     private String authorName, authorUsername;
     private Long authorId;
+    private List<TagDTO> tags;
     private List<TestExampleDTO> testExamples;
     private List<TestcaseDTO> testcases = new ArrayList<>();
     private ZonedDateTime createdAt;

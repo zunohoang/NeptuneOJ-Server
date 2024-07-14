@@ -1,6 +1,7 @@
 package org.example.neptuneojserver.dto.problem;
 
 import lombok.Data;
+import org.example.neptuneojserver.models.Tag;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -16,6 +17,7 @@ public class ProblemRequestDTO {
     private ZonedDateTime createdAt;
     private boolean hidden;
     private Long authorId;
+    private List<TagDTO> tags;
     private List<TestExampleDTO> testExamples;
     private List<TestcaseDTO> testcases;
 }

@@ -20,6 +20,9 @@ public class Submission {
     @Column(name = "file_name", nullable = false, columnDefinition = "TEXT")
     private String fileName;
 
+    @Column(name = "source_code", nullable = false, columnDefinition = "TEXT")
+    private String sourceCode;
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String result;
 

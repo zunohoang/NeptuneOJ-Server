@@ -53,7 +53,7 @@ public class Problem {
     @OneToMany(mappedBy = "problem")
     private List<Submission> submissions;
 
-    @OneToMany(mappedBy = "problem")
+    @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProblemTag> problemTags;
 
     // Getters and Setters for Author, Testcase, Submission, and ProblemTag

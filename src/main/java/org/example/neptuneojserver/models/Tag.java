@@ -1,11 +1,13 @@
 package org.example.neptuneojserver.models;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 
 @Entity
+@Data
 @Table(name = "tags")
 public class Tag {
     @Id
@@ -20,9 +22,18 @@ public class Tag {
 
     // Getters and Setters
 
-    @OneToMany(mappedBy = "tag")
+    @OneToMany(mappedBy = "tag", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProblemTag> problemTags;
 
     // Getter and Setter for ProblemTag
+
+    public Tag(String title) {
+        this.title = title;
+        this.createdAt = ZonedDateTime.now();
+    }
+
+    public Tag() {
+
+    }
 }
 

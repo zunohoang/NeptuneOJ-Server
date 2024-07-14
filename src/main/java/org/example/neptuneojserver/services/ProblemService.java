@@ -1,14 +1,9 @@
 package org.example.neptuneojserver.services;
 
-import org.example.neptuneojserver.dto.problem.ProblemRequestDTO;
-import org.example.neptuneojserver.dto.problem.ProblemResponseDTO;
-import org.example.neptuneojserver.dto.problem.TestExampleDTO;
-import org.example.neptuneojserver.dto.problem.TestcaseDTO;
-import org.example.neptuneojserver.models.Problem;
-import org.example.neptuneojserver.models.TestExample;
-import org.example.neptuneojserver.models.Testcase;
-import org.example.neptuneojserver.models.User;
+import org.example.neptuneojserver.dto.problem.*;
+import org.example.neptuneojserver.models.*;
 import org.example.neptuneojserver.repositorys.ProblemRepository;
+import org.example.neptuneojserver.repositorys.TagRepository;
 import org.example.neptuneojserver.repositorys.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +21,7 @@ public class ProblemService {
 
     private final ProblemRepository problemRepository;
     private final UserRepository userRepository;
+    private final TagRepository tagRepository;
 
     public List<ProblemResponseDTO> getProblems(int page, int size) {
         List<ProblemResponseDTO> problemResponseDTOS = new ArrayList<>();
@@ -107,6 +103,28 @@ public class ProblemService {
         }
         problemResponseDTO.setTestExamples(testExamples);
 
+        // add tag
+        if(problem.getProblemTags() == null) {
+            problem.setProblemTags(new ArrayList<>());
+        }
+        List<TagDTO> tags = new ArrayList<>();
+        for (var problemTag : problem.getProblemTags()) {
+            TagDTO tagDTO = new TagDTO();
+            if(problemTag.getTag() == null) {
+                continue;
+            }
+            if(problemTag.getTag().getTitle() == null) {
+                continue;
+            }
+            if(problemTag.getTag().getId() == null) {
+                continue;
+            }
+            tagDTO.setId(problemTag.getTag().getId());
+            tagDTO.setTitle(problemTag.getTag().getTitle());
+            tags.add(tagDTO);
+        }
+        problemResponseDTO.setTags(tags);
+
         return problemResponseDTO;
     }
 
@@ -127,14 +145,36 @@ public class ProblemService {
         if (problem.getTestExamples() == null) {
             problem.setTestExamples(new ArrayList<>());
         }
+        if(problem.getProblemTags() == null) {
+            problem.setProblemTags(new ArrayList<>());
+        }
 
         // Cập nhật danh sách testcases và testExamples
         updateTestcases(problem.getTestcases(), problemDTO.getTestcases(), problem);
         updateTestExamples(problem.getTestExamples(), problemDTO.getTestExamples(), problem);
+        updateTags(problem.getProblemTags(), problemDTO.getTags(), problem);
 
         return problem;
     }
 
+    private void updateTags(List<ProblemTag> existingTags, List<TagDTO> newTagDTOs, Problem problem) {
+        existingTags.clear();
+        for (TagDTO tagDTO : newTagDTOs) {
+            // Tìm tag theo title, nếu không tồn tại thì tạo mới
+            Tag tag = tagRepository.findByTitle(tagDTO.getTitle())
+                    .orElseGet(() -> {
+                        Tag newTag = new Tag();
+                        newTag.setTitle(tagDTO.getTitle());
+                        newTag.setCreatedAt(ZonedDateTime.now());
+                        return tagRepository.save(newTag);
+                    });
+
+            ProblemTag problemTag = new ProblemTag();
+            problemTag.setProblem(problem);
+            problemTag.setTag(tag);
+            existingTags.add(problemTag);
+        }
+    }
     private void updateTestcases(List<Testcase> existingTestcases, List<TestcaseDTO> newTestcaseDTOs, Problem problem) {
         existingTestcases.clear();
         for (int i = 0; i < newTestcaseDTOs.size(); i++) {
@@ -146,7 +186,6 @@ public class ProblemService {
             existingTestcases.add(testcase);
         }
     }
-
     private void updateTestExamples(List<TestExample> existingTestExamples, List<TestExampleDTO> newTestExampleDTOs, Problem problem) {
         existingTestExamples.clear();
         for (int i = 0; i < newTestExampleDTOs.size(); i++) {
