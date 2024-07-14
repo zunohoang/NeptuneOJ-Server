@@ -22,7 +22,7 @@ public class HelloWorldController {
     @GetMapping("/submit")
     public String submit() {
 
-        dockerJudgeService.judgeSubmission("1_1_test.cpp", "Hss\n");
+//        dockerJudgeService.judgeSubmission("1_1_test.cpp", "Hss\n");
 
         return "submit";
     }
