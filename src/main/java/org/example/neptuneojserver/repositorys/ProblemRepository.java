@@ -14,4 +14,7 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
     @Query("SELECT p FROM Problem p WHERE p.hidden = false ORDER BY p.createdAt DESC")
     Page<Problem> findAllPaged(Pageable pageable);
+
+    @Query("SELECT p FROM Problem p, Submission s WHERE s.user.username = :username AND p.id = s.problem.id AND s.result = 'Completed' ORDER BY p.createdAt DESC")
+    List<Problem> findProblemsAcceptedByUsername(String username);
 }

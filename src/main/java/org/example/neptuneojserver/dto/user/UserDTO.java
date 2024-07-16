@@ -1,6 +1,8 @@
 package org.example.neptuneojserver.dto.user;
 
 import lombok.Data;
+import org.example.neptuneojserver.dto.problem.ProblemResponseDTO;
+import org.example.neptuneojserver.dto.submission.SubmissionResponseDTO;
 import org.example.neptuneojserver.models.Problem;
 import org.example.neptuneojserver.models.Submission;
 
@@ -11,7 +13,7 @@ public class UserDTO {
     private Long id;
     private String username;
     private String fullName;
-    private Long point;
+    private Float point;
     private String description;
     private Long numberOfProblems;
     private Long rank;

@@ -30,6 +30,7 @@ public class SubmissionService {
     private final UserRepository userRepository;
     private final ProblemRepository problemRepository;
     private final JudgeService judgeService;
+    private final UserService userService;
 
     public List<JudgeStatusDTO> saveSubmission(SubmissionDTO submissionDTO, Long problemId, String username) {
         User user = userRepository.findByUsername(username);
@@ -55,12 +56,42 @@ public class SubmissionService {
                 .collect(Collectors.toList());
 
         List<JudgeStatus> judgeStatuses = judgeService.judgeWithTestCase(submission.getId(), submissionDTO.getSourceCode(), testcases, problem);
+        boolean checkTLE = false;
+        boolean checkAC = false;
+        boolean checkWA = false;
+        boolean checkRE = false;
+        boolean checkCE = false;
+        for (JudgeStatus judgeStatus : judgeStatuses) {
+            if (judgeStatus.getStatus().equals("RE")) {
+                checkRE = true;
+                break;
+            }
+            if (judgeStatus.getStatus().equals("CE")) {
+                checkCE = true;
+                break;
+            }
+            if (judgeStatus.getStatus().equals("TLE")) {
+                checkTLE = true;
+                break;
+            }
+            if (judgeStatus.getStatus().equals("WA")) {
+                checkWA = true;
+                break;
+            }
+        }
 
-        submission.setResult("Completed");
-        submission.setJudgeStatuses(judgeStatuses);
-        submission.setStatus("Completed");
+        if(checkTLE) submission.setResult("TLE");
+        else if(checkWA) submission.setResult("WA");
+        else if(checkRE) submission.setResult("RE");
+        else if(checkCE) submission.setResult("CE");
+        else submission.setResult("AC");
+
+        submission.setStatus("Done");
+        submission.setJudgeStatuses(judgeStatuses);;
 
         submissionRepository.save(submission);
+
+        if(submission.getResult().equals("AC")) userService.setRank(user, submission);
 
         return judgeStatuses.stream()
                 .map(this::convertToJudgeStatusDTO)

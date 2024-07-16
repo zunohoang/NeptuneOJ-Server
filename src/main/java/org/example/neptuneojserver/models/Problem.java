@@ -1,5 +1,6 @@
 package org.example.neptuneojserver.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -40,19 +41,24 @@ public class Problem {
 
     // Getters and Setters
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "author_id", referencedColumnName = "id")
     private User author;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Testcase> testcases;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TestExample> testExamples;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "problem")
     private List<Submission> submissions;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProblemTag> problemTags;
 

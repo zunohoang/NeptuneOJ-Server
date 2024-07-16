@@ -33,7 +33,7 @@ public class User {
     private String role;
 
     @Column(nullable = false)
-    private Long point;
+    private Float point;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -61,7 +61,7 @@ public class User {
         this.password = password;
         this.fullName = fullName;
         this.role = "user";
-        this.point = 0L;
+        this.point = 0F;
         this.numberOfProblems = 0L;
         this.rank = 0L;
         this.imgUrl = null;

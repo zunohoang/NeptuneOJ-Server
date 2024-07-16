@@ -198,4 +198,7 @@ public class ProblemService {
         }
     }
 
+    public List<Problem> getProblemsAcceptedByUsername(String username) {
+        return problemRepository.findProblemsAcceptedByUsername(username);
+    }
 }

@@ -1,5 +1,6 @@
 package org.example.neptuneojserver.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class Submission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @Column(name = "source_code", columnDefinition = "TEXT")
     private String sourceCode;
 
@@ -32,18 +34,22 @@ public class Submission {
 
     // Getters and Setters
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "problem_id", referencedColumnName = "id")
     private Problem problem;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "contest_id", referencedColumnName = "id")
     private Contest contest;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL)
     private List<JudgeStatus> judgeStatuses;
 
