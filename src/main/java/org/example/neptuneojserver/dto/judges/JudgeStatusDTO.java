@@ -1,7 +1,12 @@
 package org.example.neptuneojserver.dto.judges;
 
-public class JudgeStatusDTO {
-    private String status;
-    private String message;
+import lombok.Data;
 
+@Data
+public class JudgeStatusDTO {
+    private Long id;
+    private String status;
+    private Float timeRun;
+    private Float memoryRun;
+    private Long submissionId;
 }

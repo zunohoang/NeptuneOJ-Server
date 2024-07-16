@@ -1,21 +1,26 @@
 package org.example.neptuneojserver.services;
 
 import lombok.AllArgsConstructor;
+import org.example.neptuneojserver.dto.judges.JudgeStatusDTO;
 import org.example.neptuneojserver.dto.problem.TestcaseDTO;
 import org.example.neptuneojserver.dto.submission.SubmissionDTO;
-import org.example.neptuneojserver.models.Problem;
-import org.example.neptuneojserver.models.Submission;
-import org.example.neptuneojserver.models.Testcase;
-import org.example.neptuneojserver.models.User;
+import org.example.neptuneojserver.dto.submission.SubmissionResponseDTO;
+import org.example.neptuneojserver.models.*;
 import org.example.neptuneojserver.repositorys.ProblemRepository;
 import org.example.neptuneojserver.repositorys.SubmissionRepository;
 import org.example.neptuneojserver.repositorys.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -26,16 +31,13 @@ public class SubmissionService {
     private final ProblemRepository problemRepository;
     private final JudgeService judgeService;
 
-    public String saveSubmission(SubmissionDTO submissionDTO, Long problemId, String username) {
+    public List<JudgeStatusDTO> saveSubmission(SubmissionDTO submissionDTO, Long problemId, String username) {
         User user = userRepository.findByUsername(username);
-        Optional<Problem> optinalProblem = problemRepository.findById(problemId);
-
-        if (user == null || optinalProblem.isEmpty()) {
-            // Handle case where user is not found
+        if (user == null) {
             throw new IllegalArgumentException("User not found with username: " + username);
         }
-
-        Problem problem = optinalProblem.get();
+        Problem problem = problemRepository.findById(problemId)
+                .orElseThrow(() -> new IllegalArgumentException("Problem not found with id: " + problemId));
 
         Submission submission = new Submission();
         submission.setSourceCode(submissionDTO.getSourceCode());
@@ -48,19 +50,54 @@ public class SubmissionService {
 
         submission = submissionRepository.save(submission);
 
-        List<TestcaseDTO> testcases = new ArrayList<>();
-        for (Testcase testcase : problem.getTestcases()) {
-            testcases.add(new TestcaseDTO(testcase.getId(), testcase.getInput(), testcase.getOutput(), testcase.getIndexInProblem()));
-        }
+        List<TestcaseDTO> testcases = problem.getTestcases().stream()
+                .map(tc -> new TestcaseDTO(tc.getId(), tc.getInput(), tc.getOutput(), tc.getIndexInProblem()))
+                .collect(Collectors.toList());
 
-        String result = judgeService.judgeWithTestCase(submission.getId(), submissionDTO.getSourceCode(), testcases);
+        List<JudgeStatus> judgeStatuses = judgeService.judgeWithTestCase(submission.getId(), submissionDTO.getSourceCode(), testcases, problem);
 
-        submission.setResult(result);
+        submission.setResult("Completed");
+        submission.setJudgeStatuses(judgeStatuses);
         submission.setStatus("Completed");
 
         submissionRepository.save(submission);
 
-        return result;
+        return judgeStatuses.stream()
+                .map(this::convertToJudgeStatusDTO)
+                .collect(Collectors.toList());
     }
 
+    private JudgeStatusDTO convertToJudgeStatusDTO(JudgeStatus judgeStatus) {
+        JudgeStatusDTO judgeStatusDTO = new JudgeStatusDTO();
+        judgeStatusDTO.setId(judgeStatus.getIndex_in_testcase());
+        judgeStatusDTO.setStatus(judgeStatus.getStatus());
+        judgeStatusDTO.setSubmissionId(judgeStatus.getSubmission().getId());
+        judgeStatusDTO.setTimeRun(judgeStatus.getTimeRun());
+        judgeStatusDTO.setMemoryRun(judgeStatus.getMemoryRun());
+        return judgeStatusDTO;
+    }
+
+    public SubmissionResponseDTO getSubmissionById(Long id, Principal principal) {
+        return submissionRepository.findBySubmissionId(id);
+    }
+
+    public Page<?> getSubmissions(int page, int size) {
+        Pageable pageable = PageRequest.of(Math.toIntExact(page - 1), Math.toIntExact(size), Sort.by("createdAt").descending());
+        return submissionRepository.findAllPaged(pageable);
+    }
+
+    public Page<?> getSubmissionsByUserUsername(String username, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        return submissionRepository.findByUserUsername(username, pageable);
+    }
+
+    public Page<?> getSubmissionsByProblemId(Long problemId, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        return submissionRepository.findByProblemId(problemId, pageable);
+    }
+
+    public Page<?> getSubmissionsByProblemIdAndUserUsername(Long problemId, String username, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        return submissionRepository.findByProblemIdAndUserUsername(problemId, username, pageable);
+    }
 }

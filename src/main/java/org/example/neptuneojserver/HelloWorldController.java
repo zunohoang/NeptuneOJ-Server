@@ -7,23 +7,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.awt.desktop.ScreenSleepEvent;
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.util.Date;
+
 @RestController
 @RequestMapping("/")
 public class HelloWorldController {
 
-    @Autowired
-    private DockerJudgeService dockerJudgeService;
-
-    @GetMapping("/helloworld")
-    public String helloworld() {
-        return "helloworld";
+    public static void main(String[] args) {
+        Date date = new Date();
+        System.out.println(date);
+        ZonedDateTime zonedDateTime = ZonedDateTime.now();
+        System.out.println(zonedDateTime);
     }
 
-    @GetMapping("/submit")
-    public String submit() {
-
-//        dockerJudgeService.judgeSubmission("1_1_test.cpp", "Hss\n");
-
-        return "submit";
-    }
 }

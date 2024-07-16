@@ -45,4 +45,9 @@ public class UserController {
             return ResponseEntity.ok(new Response<RegisterRequestDTO>("success", "Dang ky thanh cong", registerRequest));
         } else return ResponseEntity.status(409).build();
     }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(new Response<>("success", "Lay thong tin user thanh cong", userService.getUserById(id)));
+    }
 }

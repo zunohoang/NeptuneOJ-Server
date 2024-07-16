@@ -2,6 +2,7 @@ package org.example.neptuneojserver.services;
 
 import lombok.AllArgsConstructor;
 import org.example.neptuneojserver.dto.auth.RegisterRequestDTO;
+import org.example.neptuneojserver.dto.user.UserDTO;
 import org.example.neptuneojserver.models.User;
 import org.example.neptuneojserver.repositorys.UserRepository;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,6 +23,24 @@ public class UserService implements UserDetailsService {
 
     public User getUserById(Long id) {
         return userRepository.findById(id).orElse(null);
+    }
+
+    public UserDTO getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username);
+        UserDTO userDTO = new UserDTO();
+
+        userDTO.setId(user.getId());
+        userDTO.setUsername(user.getUsername());
+        userDTO.setFullName(user.getFullName());
+        userDTO.setPoint(user.getPoint());
+        userDTO.setDescription(user.getDescription());
+        userDTO.setNumberOfProblems(user.getNumberOfProblems());
+        userDTO.setRank(user.getRank());
+        userDTO.setSolvedProblems(user.getAuthorProblems());
+        userDTO.setCreatedProblems(user.getAuthorProblems());
+        userDTO.setSubmissions(user.getSubmissions());
+
+        return userDTO;
     }
 
     public User loginByUsernameAndPassword(String username, String password) {

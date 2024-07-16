@@ -16,16 +16,16 @@ public class Testcase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String input;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String output;
 
 //    @Column(name = "problem_id", nullable = false)
 //    private Long problemId;
 
-    @Column(name = "index_in_problem", nullable = false)
+    @Column(name = "index_in_problem")
     private Long indexInProblem;
 
     // Getters and Setters
@@ -33,6 +33,10 @@ public class Testcase {
     @ManyToOne
     @JoinColumn(name = "problem_id", referencedColumnName = "id")
     private Problem problem;
+
+    public Testcase(Long id) {
+        this.id = id;
+    }
 
     // Getter and Setter for Problem
 }

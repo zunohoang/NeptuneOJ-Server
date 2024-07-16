@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -17,7 +18,7 @@ public class Submission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "source_code", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "source_code", columnDefinition = "TEXT")
     private String sourceCode;
 
     @Column(columnDefinition = "TEXT")
@@ -26,7 +27,7 @@ public class Submission {
     @Column(length = 255)
     private String status;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at")
     private ZonedDateTime createdAt;
 
     // Getters and Setters
@@ -42,6 +43,13 @@ public class Submission {
     @ManyToOne
     @JoinColumn(name = "contest_id", referencedColumnName = "id")
     private Contest contest;
+
+    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL)
+    private List<JudgeStatus> judgeStatuses;
+
+    public Submission(Long submissionId) {
+        this.id = submissionId;
+    }
 
     // Getters and Setters for User, Problem, and Contest
 }

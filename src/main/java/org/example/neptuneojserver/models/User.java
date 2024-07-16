@@ -1,5 +1,6 @@
 package org.example.neptuneojserver.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class User {
     @Column(nullable = false, length = 255)
     private String username;
 
+    @JsonIgnore
     @Column(nullable = false, length = 255)
     private String password;
 
@@ -32,6 +34,9 @@ public class User {
 
     @Column(nullable = false)
     private Long point;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 
     @Column(name = "number_of_problems", nullable = false)
     private Long numberOfProblems;
@@ -67,4 +72,5 @@ public class User {
     public User(String username) {
         this.username = username;
     }
+
 }
