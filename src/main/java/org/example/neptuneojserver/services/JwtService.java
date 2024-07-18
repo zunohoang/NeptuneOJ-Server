@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
@@ -38,7 +39,7 @@ public class JwtService {
                 .withClaim("username", user.getUsername())
                 .withClaim("fullName", user.getFullName())
                 .withClaim("role", user.getRole())
-                .withClaim("point", user.getPoint())
+                .withClaim("point", user.getPoint().toString())
                 .withClaim("numberOfProblems", user.getNumberOfProblems())
                 .withClaim("rank", user.getRank())
                 .withClaim("id", user.getId())

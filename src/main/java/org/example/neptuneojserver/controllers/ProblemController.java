@@ -42,7 +42,18 @@ public class ProblemController {
 
     // Get all problems
     @GetMapping("/problems")
-    public ResponseEntity<Response<List<ProblemResponseDTO>>> getAllProblems(@RequestParam int page, @RequestParam int size) {
+    public ResponseEntity<Response<List<ProblemResponseDTO>>> getAllProblems(
+            @RequestParam int page,
+            @RequestParam int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String tagName) {
+
+        if(search != null && !search.isEmpty()) {
+            return ResponseEntity.ok(new Response<List<ProblemResponseDTO>>("success", "Lay danh sach bai tap thanh cong", problemService.getProblemsBySearch(page, size, search)));
+        } else if(tagName != null && !tagName.isEmpty()) {
+            return ResponseEntity.ok(new Response<List<ProblemResponseDTO>>("success", "Lay danh sach bai tap thanh cong", problemService.getProblemsByTagName(page, size, tagName)));
+        }
+
         return ResponseEntity.ok(new Response<List<ProblemResponseDTO>>("success", "Lay danh sach bai tap thanh cong", problemService.getProblems(page, size)));
     }
 
@@ -69,5 +80,4 @@ public class ProblemController {
         problemService.deleteProblem(id);
         return ResponseEntity.ok(new Response<String>("success", "Xoa bai tap thanh cong", null));
     }
-
 }

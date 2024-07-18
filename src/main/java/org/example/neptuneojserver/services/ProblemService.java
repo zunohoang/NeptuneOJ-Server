@@ -40,6 +40,7 @@ public class ProblemService {
         User author = userRepository.findByUsername(username);
         Problem problem = new Problem();
         problem.setCreatedAt(ZonedDateTime.now());
+        System.out.println(problem.getCreatedAt() + " - " + ZonedDateTime.now());
         convertToEntity(problemDTO, problem, author);
         problemRepository.save(problem);
     }
@@ -161,7 +162,7 @@ public class ProblemService {
         existingTags.clear();
         for (TagDTO tagDTO : newTagDTOs) {
             // Tìm tag theo title, nếu không tồn tại thì tạo mới
-            Tag tag = tagRepository.findByTitle(tagDTO.getTitle())
+            Tag tag = tagRepository.findById(tagDTO.getId())
                     .orElseGet(() -> {
                         Tag newTag = new Tag();
                         newTag.setTitle(tagDTO.getTitle());
@@ -200,5 +201,31 @@ public class ProblemService {
 
     public List<Problem> getProblemsAcceptedByUsername(String username) {
         return problemRepository.findProblemsAcceptedByUsername(username);
+    }
+
+    public List<ProblemResponseDTO> getProblemsBySearch(int page, int size, String search) {
+        List<ProblemResponseDTO> problemResponseDTOS = new ArrayList<>();
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        Page<Problem> problems = problemRepository.findByTitleContaining(search, pageable);
+
+        problems.forEach(problem -> {
+            ProblemResponseDTO problemResponseDTO = convertToDTO(problem);
+            problemResponseDTOS.add(problemResponseDTO);
+        });
+
+        return problemResponseDTOS;
+    }
+
+    public List<ProblemResponseDTO> getProblemsByTagName(int page, int size, String tagName) {
+        List<ProblemResponseDTO> problemResponseDTOS = new ArrayList<>();
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
+        Page<Problem> problems = problemRepository.findByTagName(tagName, pageable);
+
+        problems.forEach(problem -> {
+            ProblemResponseDTO problemResponseDTO = convertToDTO(problem);
+            problemResponseDTOS.add(problemResponseDTO);
+        });
+
+        return problemResponseDTOS;
     }
 }
