@@ -161,14 +161,19 @@ public class ProblemService {
     private void updateTags(List<ProblemTag> existingTags, List<TagDTO> newTagDTOs, Problem problem) {
         existingTags.clear();
         for (TagDTO tagDTO : newTagDTOs) {
-            // Tìm tag theo title, nếu không tồn tại thì tạo mới
-            Tag tag = tagRepository.findById(tagDTO.getId())
-                    .orElseGet(() -> {
-                        Tag newTag = new Tag();
-                        newTag.setTitle(tagDTO.getTitle());
-                        newTag.setCreatedAt(ZonedDateTime.now());
-                        return tagRepository.save(newTag);
-                    });
+            Tag tag = new Tag();
+            if(tagDTO.getId() != null) {
+                tag = tagRepository.findById(tagDTO.getId()).orElseThrow(() -> new RuntimeException("Tag not found"));
+            } else if(tagDTO.getTitle() != null) {
+                // Tìm tag theo title, nếu không tồn tại thì tạo mới
+                tag = tagRepository.findByTitle(tagDTO.getTitle())
+                        .orElseGet(() -> {
+                            Tag newTag = new Tag();
+                            newTag.setTitle(tagDTO.getTitle());
+                            newTag.setCreatedAt(ZonedDateTime.now());
+                            return tagRepository.save(newTag);
+                        });
+            }
 
             ProblemTag problemTag = new ProblemTag();
             problemTag.setProblem(problem);

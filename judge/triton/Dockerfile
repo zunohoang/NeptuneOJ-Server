@@ -20,4 +20,4 @@ USER judge
 WORKDIR /home/judge
 
 # Command to run the user's code
-CMD ["bash"]
+CMD ["BASH"]

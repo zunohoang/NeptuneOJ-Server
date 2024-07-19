@@ -12,6 +12,7 @@ import org.example.neptuneojserver.repositorys.JudgeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -49,6 +50,7 @@ public class JudgeService {
         }
     }
 
+    @Async
     public List<JudgeStatus> judgeWithTestCase(Long submissionId, String sourceCode, List<TestcaseDTO> testcases, Problem problem) {
 
         String judgeName = "triton";
@@ -229,5 +231,4 @@ public class JudgeService {
             return -1; // Xảy ra lỗi chuyển đổi
         }
     }
-
 }

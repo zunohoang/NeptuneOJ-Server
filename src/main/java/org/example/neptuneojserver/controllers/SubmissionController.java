@@ -20,10 +20,16 @@ public class SubmissionController {
     private final JudgeService judgeService;
     private final SubmissionService submissionService;
 
-    @PostMapping("/problem/{problemId}/submission")
-    public ResponseEntity<Response<?>> submitCode(@RequestBody SubmissionDTO submissionDTO, @PathVariable Long problemId, Principal principal) {
-        return ResponseEntity.ok(new Response<>("success", "Nop bai thanh cong", submissionService.saveSubmission(submissionDTO, problemId, principal.getName())));
+    @PostMapping("/problem/{problemId}/submit")
+    public ResponseEntity<Response<?>> judgeCode(@RequestBody SubmissionDTO submissionDTO, @PathVariable Long problemId, Principal principal) {
+        return ResponseEntity.ok(new Response<>("success", "Nop bai thanh cong", submissionService.judgeCode(submissionDTO, problemId, principal.getName())));
     }
+
+    // Nop bai
+//    @PostMapping("/problem/{problemId}/submission")
+//    public ResponseEntity<Response<?>> submitCode(@RequestBody SubmissionDTO submissionDTO, @PathVariable Long problemId, Principal principal) {
+//        return ResponseEntity.ok(new Response<>("success", "Nop bai thanh cong", submissionService.saveSubmission(submissionDTO, problemId, principal.getName())));
+//    }
 
     @GetMapping("/submission/{id}")
     public ResponseEntity<Response<?>> getSubmissionById(@PathVariable Long id, Principal principal) {
@@ -49,4 +55,5 @@ public class SubmissionController {
     public ResponseEntity<Response<?>> getSubmissionsByProblemIdAndUsername(@PathVariable Long problemId, @RequestParam String username, @RequestParam int page, @RequestParam int size) {
         return ResponseEntity.ok(new Response<>("success", "Lay danh sach nop bai thanh cong", submissionService.getSubmissionsByProblemIdAndUserUsername(problemId, username, page, size)));
     }
+
 }

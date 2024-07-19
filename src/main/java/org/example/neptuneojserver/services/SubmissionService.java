@@ -2,13 +2,13 @@ package org.example.neptuneojserver.services;
 
 import lombok.AllArgsConstructor;
 import org.example.neptuneojserver.dto.judges.JudgeStatusDTO;
-import org.example.neptuneojserver.dto.problem.TestcaseDTO;
 import org.example.neptuneojserver.dto.submission.SubmissionDTO;
 import org.example.neptuneojserver.dto.submission.SubmissionResponseDTO;
 import org.example.neptuneojserver.models.*;
 import org.example.neptuneojserver.repositorys.ProblemRepository;
 import org.example.neptuneojserver.repositorys.SubmissionRepository;
 import org.example.neptuneojserver.repositorys.UserRepository;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,10 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -29,10 +25,10 @@ public class SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final UserRepository userRepository;
     private final ProblemRepository problemRepository;
-    private final JudgeService judgeService;
-    private final UserService userService;
+    private final EngineService judgeEngineService;
+    private final RabbitTemplate rabbitTemplate;
 
-    public List<JudgeStatusDTO> saveSubmission(SubmissionDTO submissionDTO, Long problemId, String username) {
+    public String judgeCode(SubmissionDTO submissionDTO, Long problemId, String username) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
             throw new IllegalArgumentException("User not found with username: " + username);
@@ -51,52 +47,77 @@ public class SubmissionService {
 
         submission = submissionRepository.save(submission);
 
-        List<TestcaseDTO> testcases = problem.getTestcases().stream()
-                .map(tc -> new TestcaseDTO(tc.getId(), tc.getInput(), tc.getOutput(), tc.getIndexInProblem()))
-                .collect(Collectors.toList());
+        rabbitTemplate.convertAndSend(submission);
 
-        List<JudgeStatus> judgeStatuses = judgeService.judgeWithTestCase(submission.getId(), submissionDTO.getSourceCode(), testcases, problem);
-        boolean checkTLE = false;
-        boolean checkAC = false;
-        boolean checkWA = false;
-        boolean checkRE = false;
-        boolean checkCE = false;
-        for (JudgeStatus judgeStatus : judgeStatuses) {
-            if (judgeStatus.getStatus().equals("RE")) {
-                checkRE = true;
-                break;
-            }
-            if (judgeStatus.getStatus().equals("CE")) {
-                checkCE = true;
-                break;
-            }
-            if (judgeStatus.getStatus().equals("TLE")) {
-                checkTLE = true;
-                break;
-            }
-            if (judgeStatus.getStatus().equals("WA")) {
-                checkWA = true;
-                break;
-            }
-        }
-
-        if(checkTLE) submission.setResult("TLE");
-        else if(checkWA) submission.setResult("WA");
-        else if(checkRE) submission.setResult("RE");
-        else if(checkCE) submission.setResult("CE");
-        else submission.setResult("AC");
-
-        submission.setStatus("Done");
-        submission.setJudgeStatuses(judgeStatuses);;
-
-        submissionRepository.save(submission);
-
-        if(submission.getResult().equals("AC")) userService.setRank(user, submission);
-
-        return judgeStatuses.stream()
-                .map(this::convertToJudgeStatusDTO)
-                .collect(Collectors.toList());
+        return "{'submissionId': " + submission.getId() + "}";
     }
+
+
+//    public List<JudgeStatusDTO> saveSubmission(SubmissionDTO submissionDTO, Long problemId, String username) {
+//        User user = userRepository.findByUsername(username);
+//        if (user == null) {
+//            throw new IllegalArgumentException("User not found with username: " + username);
+//        }
+//        Problem problem = problemRepository.findById(problemId)
+//                .orElseThrow(() -> new IllegalArgumentException("Problem not found with id: " + problemId));
+//
+//        Submission submission = new Submission();
+//        submission.setSourceCode(submissionDTO.getSourceCode());
+//        submission.setCreatedAt(ZonedDateTime.now());
+//        submission.setUser(user);
+//        submission.setProblem(problem);
+//        submission.setContest(null);
+//        submission.setStatus("Pending");
+//        submission.setResult("Waiting for judge");
+//
+//        submission = submissionRepository.save(submission);
+//
+//        List<TestcaseDTO> testcases = problem.getTestcases().stream()
+//                .map(tc -> new TestcaseDTO(tc.getId(), tc.getInput(), tc.getOutput(), tc.getIndexInProblem()))
+//                .collect(Collectors.toList());
+//
+//        List<JudgeStatus> judgeStatuses = judgeService.judgeWithTestCase(submission.getId(), submissionDTO.getSourceCode(), testcases, problem);
+//        boolean checkTLE = false;
+//        boolean checkAC = false;
+//        boolean checkWA = false;
+//        boolean checkRE = false;
+//        boolean checkCE = false;
+//        for (JudgeStatus judgeStatus : judgeStatuses) {
+//            if (judgeStatus.getStatus().equals("RE")) {
+//                checkRE = true;
+//                break;
+//            }
+//            if (judgeStatus.getStatus().equals("CE")) {
+//                checkCE = true;
+//                break;
+//            }
+//            if (judgeStatus.getStatus().equals("TLE")) {
+//                checkTLE = true;
+//                break;
+//            }
+//            if (judgeStatus.getStatus().equals("WA")) {
+//                checkWA = true;
+//                break;
+//            }
+//        }
+//
+//        if(checkTLE) submission.setResult("TLE");
+//        else if(checkWA) submission.setResult("WA");
+//        else if(checkRE) submission.setResult("RE");
+//        else if(checkCE) submission.setResult("CE");
+//        else submission.setResult("AC");
+//
+//        submission.setStatus("Done");
+//        submission.setJudgeStatuses(judgeStatuses);;
+//
+//        submissionRepository.save(submission);
+//
+//        if(submission.getResult().equals("AC")) userService.setRank(user, submission);
+//
+//        return judgeStatuses.stream()
+//                .map(this::convertToJudgeStatusDTO)
+//                .collect(Collectors.toList());
+//    }
 
     private JudgeStatusDTO convertToJudgeStatusDTO(JudgeStatus judgeStatus) {
         JudgeStatusDTO judgeStatusDTO = new JudgeStatusDTO();
