@@ -47,7 +47,7 @@ public class Problem {
     private User author;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Testcase> testcases;
 
     @JsonIgnore

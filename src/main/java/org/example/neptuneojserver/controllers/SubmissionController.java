@@ -8,6 +8,7 @@ import org.example.neptuneojserver.models.Submission;
 import org.example.neptuneojserver.services.JudgeService;
 import org.example.neptuneojserver.services.SubmissionService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -17,10 +18,10 @@ import java.security.Principal;
 @RequestMapping("/api/v1")
 @SecurityRequirement(name = "Bearer Authentication")
 public class SubmissionController {
-    private final JudgeService judgeService;
+
     private final SubmissionService submissionService;
 
-    @PostMapping("/problem/{problemId}/submit")
+    @PostMapping("/problem/{problemId}/submission")
     public ResponseEntity<Response<?>> judgeCode(@RequestBody SubmissionDTO submissionDTO, @PathVariable Long problemId, Principal principal) {
         return ResponseEntity.ok(new Response<>("success", "Nop bai thanh cong", submissionService.judgeCode(submissionDTO, problemId, principal.getName())));
     }

@@ -1,6 +1,7 @@
 package org.example.neptuneojserver.services;
 
 import lombok.AllArgsConstructor;
+import org.example.neptuneojserver.configs.RabbitMQConfig;
 import org.example.neptuneojserver.dto.judges.JudgeStatusDTO;
 import org.example.neptuneojserver.dto.submission.SubmissionDTO;
 import org.example.neptuneojserver.dto.submission.SubmissionResponseDTO;
@@ -8,11 +9,13 @@ import org.example.neptuneojserver.models.*;
 import org.example.neptuneojserver.repositorys.ProblemRepository;
 import org.example.neptuneojserver.repositorys.SubmissionRepository;
 import org.example.neptuneojserver.repositorys.UserRepository;
+import org.example.neptuneojserver.websockets.SubmissionWebSocketDTO;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -25,8 +28,8 @@ public class SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final UserRepository userRepository;
     private final ProblemRepository problemRepository;
-    private final EngineService judgeEngineService;
     private final RabbitTemplate rabbitTemplate;
+    private SimpMessagingTemplate simpMessagingTemplate;
 
     public String judgeCode(SubmissionDTO submissionDTO, Long problemId, String username) {
         User user = userRepository.findByUsername(username);
@@ -47,11 +50,19 @@ public class SubmissionService {
 
         submission = submissionRepository.save(submission);
 
-        rabbitTemplate.convertAndSend(submission);
+        simpMessagingTemplate.convertAndSend("/topic/submission",
+                new SubmissionWebSocketDTO(submission.getId(),
+                        submission.getProblem().getId(),
+                        submission.getProblem().getTitle(),
+                        submission.getUser().getUsername(),
+                        submission.getUser().getFullName(),
+                        "Pending"
+                        ));
+
+        rabbitTemplate.convertAndSend(RabbitMQConfig.JUDGE_QUEUE, String.valueOf(submission.getId()));
 
         return "{'submissionId': " + submission.getId() + "}";
     }
-
 
 //    public List<JudgeStatusDTO> saveSubmission(SubmissionDTO submissionDTO, Long problemId, String username) {
 //        User user = userRepository.findByUsername(username);

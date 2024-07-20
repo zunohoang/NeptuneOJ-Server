@@ -1,5 +1,6 @@
 package org.example.neptuneojserver.services;
 
+import lombok.AllArgsConstructor;
 import org.example.neptuneojserver.models.Submission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.ListOperations;
@@ -10,14 +11,16 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class RedisService {
-
-    @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    public void addElementToList(String key,Object element) {
-        ListOperations<String, Object> listOps = redisTemplate.opsForList();
-        listOps.rightPush(key, element);
+    public void addElementToList(String key, Object value) {
+        try {
+            redisTemplate.opsForList().rightPush(key, value);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to add element to Redis list", e);
+        }
     }
 
     public Long getListSize(String key) {

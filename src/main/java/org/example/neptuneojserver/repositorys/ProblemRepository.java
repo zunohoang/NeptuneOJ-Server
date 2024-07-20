@@ -23,4 +23,7 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
     @Query("SELECT p FROM Problem p JOIN p.problemTags pt JOIN pt.tag t WHERE t.title = :tagName")
     Page<Problem> findByTagName(String tagName, Pageable pageable);
+
+    @Query("SELECT p FROM Problem p WHERE p.id = :id")
+    Problem getProblemById(Long id);
 }
