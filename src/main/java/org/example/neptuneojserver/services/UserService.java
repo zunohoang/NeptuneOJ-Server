@@ -5,7 +5,7 @@ import org.example.neptuneojserver.dto.auth.RegisterRequestDTO;
 import org.example.neptuneojserver.dto.user.UserDTO;
 import org.example.neptuneojserver.models.Submission;
 import org.example.neptuneojserver.models.User;
-import org.example.neptuneojserver.repositorys.UserRepository;
+import org.example.neptuneojserver.repositories.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +17,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

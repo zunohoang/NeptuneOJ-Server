@@ -1,6 +1,5 @@
-package org.example.neptuneojserver.repositorys;
+package org.example.neptuneojserver.repositories;
 
-import jdk.jfr.Registered;
 import org.example.neptuneojserver.models.JudgeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

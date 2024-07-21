@@ -1,23 +1,17 @@
 package org.example.neptuneojserver.services;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.example.neptuneojserver.dto.judges.JudgeStatusDTO;
 import org.example.neptuneojserver.dto.problem.TestcaseDTO;
 import org.example.neptuneojserver.models.JudgeStatus;
 import org.example.neptuneojserver.models.Problem;
 import org.example.neptuneojserver.models.Submission;
 import org.example.neptuneojserver.models.Testcase;
-import org.example.neptuneojserver.repositorys.JudgeRepository;
+import org.example.neptuneojserver.repositories.JudgeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.time.Duration;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +22,7 @@ public class JudgeService {
 
     private final String projectDirectory = "E:\\1\\NeptuneOJ\\neptuneoj-server\\judge\\";
 
-    private static final Logger logger = LoggerFactory.getLogger(DockerJudgeService.class);
+    private static final Logger logger = LoggerFactory.getLogger(JudgeService.class);
 
     public JudgeService(JudgeRepository judgeRepository) {
         this.judgeRepository = judgeRepository;

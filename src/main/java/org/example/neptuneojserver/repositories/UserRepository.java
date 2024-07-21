@@ -1,4 +1,4 @@
-package org.example.neptuneojserver.repositorys;
+package org.example.neptuneojserver.repositories;
 
 import org.example.neptuneojserver.models.User;
 import org.springframework.data.domain.Page;

@@ -1,19 +1,17 @@
 package org.example.neptuneojserver.services;
 
-import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
-import org.example.neptuneojserver.configs.RabbitMQConfig;
+import org.example.neptuneojserver.caches.EngineCache;
 import org.example.neptuneojserver.dto.judges.EngineDTO;
 import org.example.neptuneojserver.dto.problem.TestcaseDTO;
 import org.example.neptuneojserver.models.*;
-import org.example.neptuneojserver.repositorys.JudgeEngineRepository;
-import org.example.neptuneojserver.repositorys.JudgeRepository;
-import org.example.neptuneojserver.repositorys.ProblemRepository;
-import org.example.neptuneojserver.repositorys.SubmissionRepository;
+import org.example.neptuneojserver.repositories.JudgeEngineRepository;
+import org.example.neptuneojserver.repositories.JudgeRepository;
+import org.example.neptuneojserver.repositories.ProblemRepository;
+import org.example.neptuneojserver.repositories.SubmissionRepository;
 import org.example.neptuneojserver.utils.DataStream;
 import org.example.neptuneojserver.websockets.JudgeWebSocketDTO;
 import org.example.neptuneojserver.websockets.SubmissionWebSocketDTO;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -29,59 +27,18 @@ import java.io.*;
 public class EngineService {
 
     private final JudgeEngineRepository judgeEngineRepository;
-    private final RedisService redisService;
     private final DataStream dataStream;
     private final SubmissionRepository submissionRepository;
     private final ProblemRepository problemRepository;
     private final JudgeRepository judgeRepository;
     private final SimpMessagingTemplate simpMessagingTemplate;
-
-    @PostConstruct
-    public void init() {
-        List<JudgeEngine> judgeEngines = judgeEngineRepository.findAll();
-        for (JudgeEngine judgeEngine : judgeEngines) {
-            EngineDTO engineDTO = new EngineDTO();
-            engineDTO.setName(judgeEngine.getName());
-            engineDTO.setStatus(judgeEngine.getStatus());
-            redisService.addElementToList("judgeEngines", engineDTO);
-        }
-        System.out.println("Judge Engine Service Initialized");
-    }
-
-
-    @RabbitListener(queues = RabbitMQConfig.JUDGE_QUEUE)
-    public void listen(String s) {
-        try {
-            Long submissionId = Long.parseLong(s);
-            List<Object> judgeEngines = redisService.getAllElementsFromList("judgeEngines");
-            for (Object judgeEngine : judgeEngines) {
-                EngineDTO engine = (EngineDTO) judgeEngine;
-                if (engine.getStatus().equals("READY")) {
-                    engine.setStatus("BUSY");
-                    // run code
-                    System.out.println(engine.getName());
-                    this.runEngine(engine, submissionId);
-                    return;
-                }
-            }
-            listen(s);
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-        }
-    }
+    private final EngineCache engineCache;
 
     @Async
     public void runEngine(EngineDTO engine, Long submissionId) {
         Submission submission = submissionRepository.findById(submissionId).orElseThrow();
         Problem problem = problemRepository.getProblemById(submission.getProblem().getId());
-        simpMessagingTemplate.convertAndSend("/topic/submission",
-                new SubmissionWebSocketDTO(submission.getId(),
-                        submission.getProblem().getId(),
-                        submission.getProblem().getTitle(),
-                        submission.getUser().getUsername(),
-                        submission.getUser().getFullName(),
-                        "Running"
-                ));
+        simpMessagingTemplate.convertAndSend("/topic/submission", new SubmissionWebSocketDTO(submission.getId(), submission.getProblem().getId(), submission.getProblem().getTitle(), submission.getUser().getUsername(), submission.getUser().getFullName(), "Running"));
         try {
             if (compilerCode(engine, submission.getId(), submission.getSourceCode(), "cpp")) {
                 List<JudgeStatus> judgeStatuses = new ArrayList<>();
@@ -95,39 +52,38 @@ public class EngineService {
                             return testcaseDTO;
                         })
                         .toList();
+                boolean checkAC = false;
+                boolean checkWA = false;
+                boolean checkTLE = false;
+                boolean checkRTE = false;
                 for(TestcaseDTO testcase : testcaseDTOS) {
                     System.out.println("Running testcase " + testcase.getIndexInProblem() + " for submission " + submission.getId());
-                    JudgeStatus judgeStatus = runCode(
-                            submission
-                            , engine
-                            , "cpp"
-                            , testcase
-                    );
+                    JudgeStatus judgeStatus = runCode(submission, engine, "cpp", testcase);
+                    switch (judgeStatus.getStatus()) {
+                        case "AC" -> checkAC = true;
+                        case "WA" -> checkWA = true;
+                        case "TLE" -> checkTLE = true;
+                        default -> checkRTE = true;
+                    }
                     System.out.println("Username: " + submission.getUser().getUsername());
-                    simpMessagingTemplate.convertAndSendToUser(submission.getUser().getUsername(), "/topic/judge",
-                            new JudgeWebSocketDTO(
-                                    submission.getId(),
-                                    judgeStatus.getIndex_in_testcase(),
-                                    judgeStatus.getStatus(),
-                                    judgeStatus.getTimeRun(),
-                                    judgeStatus.getMemoryRun()
-                            )
-                           );
+                    simpMessagingTemplate.convertAndSendToUser(submission.getUser().getUsername(), "/topic/judge", new JudgeWebSocketDTO(submission.getId(), judgeStatus.getIndex_in_testcase(), judgeStatus.getStatus(), judgeStatus.getTimeRun(), judgeStatus.getMemoryRun()));
                     judgeStatuses.add(judgeStatus);
                 }
+
+                if(checkTLE) {
+                    submission.setResult("TLE");
+                } else if(checkRTE) {
+                    submission.setResult("RTE");
+                } else if(checkWA) {
+                    submission.setResult("WA");
+                } else {
+                    submission.setResult("AC");
+                }
+                submission.setStatus("Completed");
                 submission.setJudgeStatuses(judgeStatuses);
                 submissionRepository.save(submission);
-                simpMessagingTemplate.convertAndSend("/topic/submission",
-                        new SubmissionWebSocketDTO(submission.getId(),
-                                submission.getProblem().getId(),
-                                submission.getProblem().getTitle(),
-                                submission.getUser().getUsername(),
-                                submission.getUser().getFullName(),
-                                "AC"
-                        ));
-                engine.setStatus("READY");
-                redisService.removeElementFromList("judgeEngines", engine);
-                redisService.addElementToList("judgeEngines", engine);
+                simpMessagingTemplate.convertAndSend("/topic/submission", new SubmissionWebSocketDTO(submission.getId(), submission.getProblem().getId(), submission.getProblem().getTitle(), submission.getUser().getUsername(), submission.getUser().getFullName(), submission.getResult()));
+                engineCache.updateEngine(engine.getName(), "READY");
             } else {
                 CEStatus(engine, submission);
             }
@@ -149,9 +105,7 @@ public class EngineService {
                         submission.getUser().getFullName(),
                         "CE"
                 ));
-        engine.setStatus("READY");
-        redisService.removeElementFromList("judgeEngines", engine);
-        redisService.addElementToList("judgeEngines", engine);
+        engineCache.updateEngine(engine.getName(), "READY");
         throw new RuntimeException("Compile error");
     }
 
@@ -160,7 +114,7 @@ public class EngineService {
             // docker exec moon_engine sh -c "time timeout 1s /home/judge/123.exe"
             String[] cmd = {
                     "docker", "exec", "-i", engine.getName(),
-                    "bash", "-c", "time /home/judge/" + submission.getId() + ".exe"
+                    "bash", "-c", "time timeout " + submission.getProblem().getTimeLimit() + "s /home/judge/" + submission.getId() + ".exe"
             };
 
             ProcessBuilder processBuilder = new ProcessBuilder(cmd);

@@ -1,12 +1,8 @@
 package org.example.neptuneojserver.services;
 
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.example.neptuneojserver.models.Tag;
-import org.example.neptuneojserver.repositorys.ProblemRepository;
-import org.example.neptuneojserver.repositorys.TagRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.example.neptuneojserver.repositories.TagRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;

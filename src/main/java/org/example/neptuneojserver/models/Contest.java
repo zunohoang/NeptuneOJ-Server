@@ -30,6 +30,9 @@ public class Contest {
     @Column(name = "end_time", nullable = false)
     private ZonedDateTime endTime;
 
+    @Column(name = "number_of_participants", nullable = false)
+    private Long numberOfParticipants;
+
     @Column(name = "ranking_freeze_time")
     private ZonedDateTime rankingFreezeTime;
 

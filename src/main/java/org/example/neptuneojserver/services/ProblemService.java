@@ -2,9 +2,9 @@ package org.example.neptuneojserver.services;
 
 import org.example.neptuneojserver.dto.problem.*;
 import org.example.neptuneojserver.models.*;
-import org.example.neptuneojserver.repositorys.ProblemRepository;
-import org.example.neptuneojserver.repositorys.TagRepository;
-import org.example.neptuneojserver.repositorys.UserRepository;
+import org.example.neptuneojserver.repositories.ProblemRepository;
+import org.example.neptuneojserver.repositories.TagRepository;
+import org.example.neptuneojserver.repositories.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

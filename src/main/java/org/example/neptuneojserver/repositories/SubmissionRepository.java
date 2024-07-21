@@ -1,6 +1,5 @@
-package org.example.neptuneojserver.repositorys;
+package org.example.neptuneojserver.repositories;
 
-import jakarta.annotation.Nullable;
 import org.example.neptuneojserver.dto.submission.SubmissionResponseDTO;
 import org.example.neptuneojserver.models.Submission;
 import org.springframework.data.domain.Pageable;
@@ -8,9 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
-
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface SubmissionRepository extends JpaRepository<Submission, Long>{

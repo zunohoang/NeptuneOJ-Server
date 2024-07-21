@@ -1,4 +1,5 @@
-package org.example.neptuneojserver.services;
+package org.example.neptuneojserver.caches;
+
 
 import lombok.AllArgsConstructor;
 import org.example.neptuneojserver.models.Submission;
@@ -12,7 +13,7 @@ import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class RedisService {
+public class RedisCache {
     private RedisTemplate<String, Object> redisTemplate;
 
     public void addElementToList(String key, Object value) {
