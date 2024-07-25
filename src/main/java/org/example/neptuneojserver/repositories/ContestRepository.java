@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
+
 public interface ContestRepository extends JpaRepository<Contest, Long> {
 
     // get contest by time
@@ -19,4 +21,6 @@ public interface ContestRepository extends JpaRepository<Contest, Long> {
     @Query("SELECT new org.example.neptuneojserver.dto.contest.ContestDTO(c.id, c.title, c.startTime, c.endTime, c.numberOfParticipants) FROM Contest c WHERE c.endTime < CURRENT_TIMESTAMP")
     Page<ContestDTO> findByPast(Pageable pageable);
 
+    @Query("SELECT new org.example.neptuneojserver.dto.contest.ContestDTO(c.id, c.title, c.startTime, c.endTime, c.numberOfParticipants) FROM Contest c WHERE c.title LIKE %:title%")
+    List<ContestDTO> findByTitle(String title, Pageable pageable);
 }

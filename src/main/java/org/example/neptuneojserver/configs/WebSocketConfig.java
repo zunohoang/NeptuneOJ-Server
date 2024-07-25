@@ -1,6 +1,7 @@
-package org.example.neptuneojserver.websockets;
+package org.example.neptuneojserver.configs;
 
 import lombok.AllArgsConstructor;
+import org.example.neptuneojserver.auths.AuthenticationInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

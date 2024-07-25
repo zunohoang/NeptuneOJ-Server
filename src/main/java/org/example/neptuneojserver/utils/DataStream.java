@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 
 @Component
 public class DataStream {
+
+
     public String readStream(java.io.InputStream stream) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
         StringBuilder output = new StringBuilder();

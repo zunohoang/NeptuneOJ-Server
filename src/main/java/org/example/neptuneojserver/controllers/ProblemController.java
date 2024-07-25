@@ -47,7 +47,6 @@ public class ProblemController {
             @RequestParam int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String tagName) {
-
         if(search != null && !search.isEmpty()) {
             return ResponseEntity.ok(new Response<List<ProblemResponseDTO>>("success", "Lay danh sach bai tap thanh cong", problemService.getProblemsBySearch(page, size, search)));
         } else if(tagName != null && !tagName.isEmpty()) {

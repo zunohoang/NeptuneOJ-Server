@@ -1,11 +1,17 @@
 package org.example.neptuneojserver.models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 
 @Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "contests")
 public class Contest {
     @Id
@@ -49,6 +55,11 @@ public class Contest {
 
     @OneToMany(mappedBy = "contest")
     private List<ContestRanking> contestRankings;
+
+    public Contest(Long id, String title) {
+        this.id = id;
+        this.title = title;
+    }
 
     // Getters and Setters for ContestProblem, Submission, and ContestRanking
 }

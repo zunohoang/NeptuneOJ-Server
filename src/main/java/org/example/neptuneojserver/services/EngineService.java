@@ -10,8 +10,8 @@ import org.example.neptuneojserver.repositories.JudgeRepository;
 import org.example.neptuneojserver.repositories.ProblemRepository;
 import org.example.neptuneojserver.repositories.SubmissionRepository;
 import org.example.neptuneojserver.utils.DataStream;
-import org.example.neptuneojserver.websockets.JudgeWebSocketDTO;
-import org.example.neptuneojserver.websockets.SubmissionWebSocketDTO;
+import org.example.neptuneojserver.dto.judges.JudgeWebSocketDTO;
+import org.example.neptuneojserver.dto.submission.SubmissionWebSocketDTO;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -38,7 +38,7 @@ public class EngineService {
     public void runEngine(EngineDTO engine, Long submissionId) {
         Submission submission = submissionRepository.findById(submissionId).orElseThrow();
         Problem problem = problemRepository.getProblemById(submission.getProblem().getId());
-        simpMessagingTemplate.convertAndSend("/topic/submission", new SubmissionWebSocketDTO(submission.getId(), submission.getProblem().getId(), submission.getProblem().getTitle(), submission.getUser().getUsername(), submission.getUser().getFullName(), "Running"));
+        //simpMessagingTemplate.convertAndSend("/topic/submission", getSubmissionWebSocketDTO(submission));
         try {
             if (compilerCode(engine, submission.getId(), submission.getSourceCode(), "cpp")) {
                 List<JudgeStatus> judgeStatuses = new ArrayList<>();
@@ -56,6 +56,9 @@ public class EngineService {
                 boolean checkWA = false;
                 boolean checkTLE = false;
                 boolean checkRTE = false;
+                long countAccept = 0L;
+                Float timeRun = 0F;
+                Float memoryRun = 0F;
                 for(TestcaseDTO testcase : testcaseDTOS) {
                     System.out.println("Running testcase " + testcase.getIndexInProblem() + " for submission " + submission.getId());
                     JudgeStatus judgeStatus = runCode(submission, engine, "cpp", testcase);
@@ -66,23 +69,31 @@ public class EngineService {
                         default -> checkRTE = true;
                     }
                     System.out.println("Username: " + submission.getUser().getUsername());
-                    simpMessagingTemplate.convertAndSendToUser(submission.getUser().getUsername(), "/topic/judge", new JudgeWebSocketDTO(submission.getId(), judgeStatus.getIndex_in_testcase(), judgeStatus.getStatus(), judgeStatus.getTimeRun(), judgeStatus.getMemoryRun()));
+                    simpMessagingTemplate.convertAndSend("/topic/judge", new JudgeWebSocketDTO(submission.getId(), judgeStatus.getIndex_in_testcase(), judgeStatus.getStatus(), judgeStatus.getTimeRun(), judgeStatus.getMemoryRun()));
                     judgeStatuses.add(judgeStatus);
+                    countAccept += judgeStatus.getStatus().equals("AC") ? 1 : 0;
+                    timeRun += judgeStatus.getTimeRun();
+                    memoryRun += judgeStatus.getMemoryRun();
                 }
 
                 if(checkTLE) {
-                    submission.setResult("TLE");
+                    submission.setStatus("TLE");
                 } else if(checkRTE) {
-                    submission.setResult("RTE");
+                    submission.setStatus("RTE");
                 } else if(checkWA) {
-                    submission.setResult("WA");
+                    submission.setStatus("WA");
                 } else {
-                    submission.setResult("AC");
+                    submission.setStatus("AC");
                 }
-                submission.setStatus("Completed");
+                submission.setResult("Completed");
                 submission.setJudgeStatuses(judgeStatuses);
+                submission.setNumberTest((long) testcaseDTOS.size());
+                submission.setTestAccept(countAccept);
+                submission.setTimeRun(timeRun);
+                submission.setMemoryRun(memoryRun);
                 submissionRepository.save(submission);
-                simpMessagingTemplate.convertAndSend("/topic/submission", new SubmissionWebSocketDTO(submission.getId(), submission.getProblem().getId(), submission.getProblem().getTitle(), submission.getUser().getUsername(), submission.getUser().getFullName(), submission.getResult()));
+                SubmissionWebSocketDTO submissionWebSocketDTO = getSubmissionWebSocketDTO(submission);
+                simpMessagingTemplate.convertAndSend("/topic/submission", submissionWebSocketDTO);
                 engineCache.updateEngine(engine.getName(), "READY");
             } else {
                 CEStatus(engine, submission);
@@ -93,20 +104,28 @@ public class EngineService {
         }
     }
 
+    public static SubmissionWebSocketDTO getSubmissionWebSocketDTO(Submission submission) {
+        SubmissionWebSocketDTO submissionWebSocketDTO = new SubmissionWebSocketDTO();
+        submissionWebSocketDTO.setSubmissionId(submission.getId());
+        submissionWebSocketDTO.setProblemId(submission.getProblem().getId());
+        submissionWebSocketDTO.setProblemTitle(submission.getProblem().getTitle());
+        submissionWebSocketDTO.setUsername(submission.getUser().getUsername());
+        submissionWebSocketDTO.setStatus(submission.getStatus());
+        submissionWebSocketDTO.setResult(submission.getResult());
+        submissionWebSocketDTO.setNumberTest(submission.getNumberTest());
+        submissionWebSocketDTO.setTestAccept(submission.getTestAccept());
+        submissionWebSocketDTO.setCreatedAt(submission.getCreatedAt());
+        submissionWebSocketDTO.setTimeRun(submission.getTimeRun());
+        submissionWebSocketDTO.setMemoryRun(submission.getMemoryRun());
+        return submissionWebSocketDTO;
+    }
+
     private void CEStatus(EngineDTO engine, Submission submission) {
-        submission.setResult("CE");
-        submission.setStatus("Completed");
+        submission.setStatus("CE");
+        submission.setResult("Completed");
         submissionRepository.save(submission);
-        simpMessagingTemplate.convertAndSend("/topic/submission",
-                new SubmissionWebSocketDTO(submission.getId(),
-                        submission.getProblem().getId(),
-                        submission.getProblem().getTitle(),
-                        submission.getUser().getUsername(),
-                        submission.getUser().getFullName(),
-                        "CE"
-                ));
+        simpMessagingTemplate.convertAndSend("/topic/submission", getSubmissionWebSocketDTO(submission));
         engineCache.updateEngine(engine.getName(), "READY");
-        throw new RuntimeException("Compile error");
     }
 
     public JudgeStatus runCode(Submission submission, EngineDTO engine, String language, TestcaseDTO testcase) throws Exception {

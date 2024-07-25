@@ -9,7 +9,7 @@ import org.example.neptuneojserver.models.*;
 import org.example.neptuneojserver.repositories.ProblemRepository;
 import org.example.neptuneojserver.repositories.SubmissionRepository;
 import org.example.neptuneojserver.repositories.UserRepository;
-import org.example.neptuneojserver.websockets.SubmissionWebSocketDTO;
+import org.example.neptuneojserver.dto.submission.SubmissionWebSocketDTO;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,21 +47,31 @@ public class SubmissionService {
         submission.setContest(null);
         submission.setStatus("Pending");
         submission.setResult("Waiting for judge");
+        submission.setNumberTest((long) problem.getTestcases().size());
+        submission.setTestAccept(0L);
 
         submission = submissionRepository.save(submission);
 
-        simpMessagingTemplate.convertAndSend("/topic/submission",
-                new SubmissionWebSocketDTO(submission.getId(),
-                        submission.getProblem().getId(),
-                        submission.getProblem().getTitle(),
-                        submission.getUser().getUsername(),
-                        submission.getUser().getFullName(),
-                        "Pending"
-                        ));
+        simpMessagingTemplate.convertAndSend("/topic/submission", getSubmissionWebSocketDTO(submission));
 
         rabbitTemplate.convertAndSend(RabbitMQConfig.JUDGE_QUEUE, String.valueOf(submission.getId()));
 
         return "{'submissionId': " + submission.getId() + "}";
+    }
+    public static SubmissionWebSocketDTO getSubmissionWebSocketDTO(Submission submission) {
+        SubmissionWebSocketDTO submissionWebSocketDTO = new SubmissionWebSocketDTO();
+        submissionWebSocketDTO.setSubmissionId(submission.getId());
+        submissionWebSocketDTO.setProblemId(submission.getProblem().getId());
+        submissionWebSocketDTO.setProblemTitle(submission.getProblem().getTitle());
+        submissionWebSocketDTO.setUsername(submission.getUser().getUsername());
+        submissionWebSocketDTO.setStatus(submission.getStatus());
+        submissionWebSocketDTO.setResult(submission.getResult());
+        submissionWebSocketDTO.setCreatedAt(submission.getCreatedAt());
+        submissionWebSocketDTO.setNumberTest(submission.getNumberTest());
+        submissionWebSocketDTO.setTestAccept(submission.getTestAccept());
+        submissionWebSocketDTO.setTimeRun(submission.getTimeRun());
+        submissionWebSocketDTO.setMemoryRun(submission.getMemoryRun());
+        return submissionWebSocketDTO;
     }
 
 //    public List<JudgeStatusDTO> saveSubmission(SubmissionDTO submissionDTO, Long problemId, String username) {
@@ -145,7 +155,7 @@ public class SubmissionService {
     }
 
     public Page<?> getSubmissions(int page, int size) {
-        Pageable pageable = PageRequest.of(Math.toIntExact(page - 1), Math.toIntExact(size), Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         return submissionRepository.findAllPaged(pageable);
     }
 

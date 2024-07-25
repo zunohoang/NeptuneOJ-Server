@@ -1,4 +1,4 @@
-package org.example.neptuneojserver.securitys;
+package org.example.neptuneojserver.auths;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

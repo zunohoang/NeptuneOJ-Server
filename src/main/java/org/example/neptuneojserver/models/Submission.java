@@ -29,6 +29,18 @@ public class Submission {
     @Column(length = 255)
     private String status;
 
+    @Column(name = "time_run")
+    private Float timeRun;
+
+    @Column(name = "memory_run")
+    private Float memoryRun;
+
+    @Column(name = "test_accept")
+    private Long testAccept;
+
+    @Column(name = "number_test")
+    private Long numberTest;
+
     @Column(name = "created_at")
     private ZonedDateTime createdAt;
 
@@ -49,8 +61,7 @@ public class Submission {
     @JoinColumn(name = "contest_id", referencedColumnName = "id")
     private Contest contest;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "submission")
     private List<JudgeStatus> judgeStatuses;
 
     public Submission(Long submissionId) {

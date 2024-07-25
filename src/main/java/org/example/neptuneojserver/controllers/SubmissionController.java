@@ -21,7 +21,7 @@ public class SubmissionController {
 
     private final SubmissionService submissionService;
 
-    @PostMapping("/problem/{problemId}/submission")
+    @PostMapping("/problem/{problemId}/submissions")
     public ResponseEntity<Response<?>> judgeCode(@RequestBody SubmissionDTO submissionDTO, @PathVariable Long problemId, Principal principal) {
         return ResponseEntity.ok(new Response<>("success", "Nop bai thanh cong", submissionService.judgeCode(submissionDTO, problemId, principal.getName())));
     }
@@ -47,14 +47,19 @@ public class SubmissionController {
         return ResponseEntity.ok(new Response<>("success", "Lay danh sach nop bai thanh cong", submissionService.getSubmissionsByProblemId(problemId, page, size)));
     }
 
-    @GetMapping("/user/{username}/submissions")
+    @GetMapping("/submissions/{username}")
     public ResponseEntity<Response<?>> getSubmissionsByUsername(@PathVariable String username, @RequestParam int page, @RequestParam int size) {
         return ResponseEntity.ok(new Response<>("success", "Lay danh sach nop bai thanh cong", submissionService.getSubmissionsByUserUsername(username, page, size)));
     }
 
-    @GetMapping("/problem/{problemId}//submissions")
-    public ResponseEntity<Response<?>> getSubmissionsByProblemIdAndUsername(@PathVariable Long problemId, @RequestParam String username, @RequestParam int page, @RequestParam int size) {
+    @GetMapping("/problem/{problemId}/submissions/{username}")
+    public ResponseEntity<Response<?>> getSubmissionsByProblemIdAndUsername(@PathVariable Long problemId, @PathVariable String username, @RequestParam int page, @RequestParam int size) {
         return ResponseEntity.ok(new Response<>("success", "Lay danh sach nop bai thanh cong", submissionService.getSubmissionsByProblemIdAndUserUsername(problemId, username, page, size)));
     }
+
+//    @GetMapping("/problems/{problemId}/submissions")
+//    public ResponseEntity<Response<?>> getSubmissionsByProblemIdAndUsername(@PathVariable Long problemId, @RequestParam String username, @RequestParam int page, @RequestParam int size) {
+//        return ResponseEntity.ok(new Response<>("success", "Lay danh sach nop bai thanh cong", submissionService.getSubmissionsByProblemIdAndUserUsername(problemId, username, page, size)));
+//    }
 
 }

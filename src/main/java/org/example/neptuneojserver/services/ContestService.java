@@ -27,7 +27,27 @@ public class ContestService {
         } else return null;
     }
 
-    private ContestDTO createContest(Contest contest) {
+    public ContestDTO createContest(Contest contest) {
+        contestRepository.save(contest);
+        return new ContestDTO(contest.getId(), contest.getTitle(), contest.getStartTime(), contest.getEndTime(), contest.getNumberOfParticipants());
+    }
 
+    public void deleteContest(Long id) {
+        contestRepository.deleteById(id);
+    }
+
+    public void updateContest(Contest contest) {
+        contestRepository.save(contest);
+    }
+
+    public ContestDTO getContest(Long id) {
+        Contest contest = contestRepository.findById(id).orElse(null);
+        if(contest == null) return null;
+        return new ContestDTO(contest.getId(), contest.getTitle(), contest.getStartTime(), contest.getEndTime(), contest.getNumberOfParticipants());
+    }
+
+    private List<ContestDTO> getContestsByTitle(String title, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        return contestRepository.findByTitle(title, pageable);
     }
 }

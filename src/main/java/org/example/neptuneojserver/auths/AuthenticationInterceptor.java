@@ -1,4 +1,4 @@
-package org.example.neptuneojserver.websockets;
+package org.example.neptuneojserver.auths;
 
 import lombok.AllArgsConstructor;
 import org.example.neptuneojserver.services.JwtService;
@@ -9,7 +9,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

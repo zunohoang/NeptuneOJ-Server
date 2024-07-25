@@ -73,4 +73,13 @@ public class User {
         this.username = username;
     }
 
+    public User(Long id) {
+        this.id = id;
+    }
+
+    public User(Long id, String username, String fullName) {
+        this.id = id;
+        this.username = username;
+        this.fullName = fullName;
+    }
 }
